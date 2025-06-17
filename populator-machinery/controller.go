@@ -790,7 +790,6 @@ func (c *controller) syncPvc(ctx context.Context, key, pvcNamespace, pvcName str
 						c.recorder.Eventf(pvc, corev1.EventTypeWarning, reasonPopulateOperationStartError, "Failed to start populate operation: %s", err)
 						return err
 					}
-					c.recorder.Eventf(pvc, corev1.EventTypeNormal, reasonPopulateOperationStartSuccess, "Populate operation started")
 				}
 
 				if c.providerFunctionConfig.PopulateCompleteFn != nil {
