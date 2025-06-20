@@ -159,6 +159,9 @@ type VolumePopulatorConfig struct {
 	// Workqueue stores the work items to be processd by the volume populator. You can provide a custom workqueue;
 	// otherwise, a default workqueue is used
 	Workqueue workqueue.TypedRateLimitingInterface[any]
+	// EventRecorder knows how to record events on behalf of an EventSource. You can provide a custom recorder;
+	// otherwise, a default recorder is used
+	Recorder record.EventRecorder
 }
 
 type PodConfig struct {
@@ -293,6 +296,12 @@ func RunControllerWithConfig(vpcfg VolumePopulatorConfig) {
 		wq = vpcfg.Workqueue
 	}
 
+	var recorder record.EventRecorder
+	if vpcfg.Recorder == nil {
+		recorder = getRecorder(kubeClient, vpcfg.Prefix+"-"+controllerNameSuffix)
+	} else {
+		recorder = vpcfg.Recorder
+	}
 	c := &controller{
 		kubeClient:             kubeClient,
 		populatorNamespace:     vpcfg.Namespace,
@@ -313,7 +322,7 @@ func RunControllerWithConfig(vpcfg VolumePopulatorConfig) {
 		workqueue:              wq,
 		gk:                     vpcfg.Gk,
 		metrics:                initMetrics(),
-		recorder:               getRecorder(kubeClient, vpcfg.Prefix+"-"+controllerNameSuffix),
+		recorder:               recorder,
 		referenceGrantLister:   referenceGrants.Lister(),
 		referenceGrantSynced:   referenceGrants.Informer().HasSynced,
 		podConfig:              vpcfg.PodConfig,
